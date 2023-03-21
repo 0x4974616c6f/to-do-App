@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  Button,
   FlatList,
-  TouchableOpacity,
+  Button,
   StyleSheet,
 } from 'react-native';
 import { Checkbox } from 'react-native-paper';
+import { getData, storeDate } from '../utils/async-storage.util';
 
 interface Task {
   id: string;
@@ -16,10 +16,21 @@ interface Task {
 }
 
 export default function HomeScreen({ navigation }: { navigation: any }) {
-  const [tasks, setTasks] = useState<Task[]>([
-    { id: '1', text: 'Task 1', completed: false },
-    { id: '2', text: 'Task 2', completed: false },
-  ]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  useEffect(() => {
+    const loadTasks = async () => {
+      const loadedTasks = await getData<Task[]>('tasks');
+      if (loadedTasks) {
+        setTasks(loadedTasks);
+      }
+    };
+    loadTasks();
+  }, []);
+
+  useEffect(() => {
+    storeDate('tasks', tasks);
+  }, [tasks]);
 
   const toggleTaskCompletion = (id: string) => {
     setTasks((prevTasks) =>
@@ -60,7 +71,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
       />
       <Button
         title="Add Task"
-        onPress={() => navigation.navigate('AddTask', { tasks, setTasks })}
+        onPress={() => navigation.navigate('AddTask', { setTasks })}
       />
     </View>
   );
@@ -88,4 +99,3 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
 });
-

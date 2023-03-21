@@ -3,10 +3,10 @@ import {
   View,
   Text,
   TextInput,
-  Button,
-  StyleSheet,
   TouchableOpacity,
+  StyleSheet,
 } from 'react-native';
+import { storeDate, getData } from '../utils/async-storage.util';
 
 interface Task {
   id: string;
@@ -18,7 +18,6 @@ interface AddTaskScreenProps {
   navigation: any;
   route: {
     params: {
-      tasks: Task[];
       setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
     };
   };
@@ -30,14 +29,19 @@ export default function AddTaskScreen({
 }: AddTaskScreenProps) {
   const [taskText, setTaskText] = useState('');
 
-  const addTask = () => {
+  const addTask = async () => {
     if (taskText.length > 0) {
       const newTask: Task = {
         id: Math.random().toString(36).substr(2, 9),
         text: taskText,
         completed: false,
       };
-      route.params.setTasks((prevTasks: Task[]) => [...prevTasks, newTask]);
+
+      const currentTasks = await getData<Task[]>('tasks') || [];
+      const updatedTasks = [...currentTasks, newTask];
+      await storeDate('tasks', updatedTasks);
+
+      route.params.setTasks(updatedTasks);
       navigation.goBack();
     }
   };
